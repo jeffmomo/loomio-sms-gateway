@@ -8,19 +8,23 @@ class NewPoll < Command
 	def initialize(message)
 		# Args go here
 		@args = []
+		# Stores message number
+		@num = message.num
 		# Outgoing messages go here
 		@response = nil
 		# Remove the command name from the message
-		message.msg.slice! 0..self.class.name.size
+		message.msg.slice! 0..name.size
+		# Break incoming message into arguments
+		arguments = message.msg.split delimiter
 		# Parse the message
-		process message
+		process arguments
 	end
 	
 	##
 	# Continues creating a command
 	#
 	def ammend(message)
-		process message
+		process [message.msg]
 	end
 	
 	##
@@ -36,16 +40,12 @@ class NewPoll < Command
 	def run
 		# Would use loomio api to run command
 		puts "Ran: <#{self}>"
-		@response = Message.new @num, "Your poll was not created."
+		@response = Message.new @num, "You asked for: <#{self}>"
 	end
 
-	def process(message)
-		# Store number
-		@num = message.num
+	def process(arguments)
 		# Clear response
 		@response = nil
-		# Break incoming message into arguments
-		arguments = message.msg.split delimiter
 		# Strip whitespace
 		arguments.map! do |arg|
 			arg.strip
@@ -61,7 +61,7 @@ class NewPoll < Command
 			when 3
 				parsePollDescription arguments.shift
 			else
-				$stderr.puts "#{@name} was passed too many arguments. Ignoring...beware."
+				$stderr.puts "#{name} was passed too many arguments. Ignoring...beware."
 				break
 			end
 		end
@@ -69,13 +69,13 @@ class NewPoll < Command
 		unless @response
 			case @args.size
 			when 0
-				@response = Message.new message.num, "What group is this poll for?"
+				@response = Message.new @num, "What group is this poll for?"
 			when 1
-				@response = Message.new message.num, "What discussion is this poll for?"
+				@response = Message.new @num, "What discussion is this poll for?"
 			when 2
-				@response = Message.new message.num, "What would you like to call this poll?"
+				@response = Message.new @num, "What would you like to call this poll?"
 			when 3
-				@response = Message.new message.num, "What is the description for this poll?"
+				@response = Message.new @num, "What is the description for this poll?"
 			end
 		end
 	end
@@ -115,7 +115,7 @@ class NewPoll < Command
 	##
 	# Returns a string representation of the newPoll command
 	def to_s
-		"#{self.class.name} #{@args.join ', '}"
+		"#{name} #{@args.join ', '}"
 	end
 end
 				
